@@ -156,27 +156,27 @@ def get_investing(inv_id: int,end_date:str):
         }
 
         response = requests.get(url, headers=headers)
-        return response.text
+        # return response.text
 
-        # if response.status_code == 200:
-        #     data = response.json()
-        #     df = pd.DataFrame(data['data'])
+        if response.status_code == 200:
+            data = response.json()
+            df = pd.DataFrame(data['data'])
 
-        #     # Ensure DataFrame is not empty
-        #     if not df.empty:
-        #         # Find the entry for the end_date
-        #         df['rowDate'] = pd.to_datetime(df['rowDate'])
-        #         end_date_entry = df[df['rowDate'] == end_date_obj]
+            # Ensure DataFrame is not empty
+            if not df.empty:
+                # Find the entry for the end_date
+                df['rowDate'] = pd.to_datetime(df['rowDate'])
+                end_date_entry = df[df['rowDate'] == end_date_obj]
 
-        #         if not end_date_entry.empty:
-        #             last_close = end_date_entry['last_close'].values[0]
-        #             return {"inv_id": inv_id, "end_date": end_date_str, "last_close": last_close}
-        #         else:
-        #             return {"inv_id": inv_id, "end_date": end_date_str, "last_close": "No data available for the specified end_date"}
-        #     else:
-        #         return {"inv_id": inv_id, "end_date": end_date_str, "last_close": "No data available"}
-        # else:
-        #     raise HTTPException(status_code=response.status_code, detail="Request failed")
+                if not end_date_entry.empty:
+                    last_close = end_date_entry['last_close'].values[0]
+                    return {"inv_id": inv_id, "end_date": end_date_str, "last_close": last_close}
+                else:
+                    return {"inv_id": inv_id, "end_date": end_date_str, "last_close": "No data available for the specified end_date"}
+            else:
+                return {"inv_id": inv_id, "end_date": end_date_str, "last_close": "No data available"}
+        else:
+            raise HTTPException(status_code=response.status_code, detail="Request failed")
 
     except Exception as e:
         return {"error": str(e)}
