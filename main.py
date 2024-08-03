@@ -176,7 +176,7 @@ def get_investing(inv_id: int,end_date:str):
             else:
                 return {"inv_id": inv_id, "end_date": end_date_str, "last_close": "No data available"}
         else:
-            raise HTTPException(status_code=response.status_code, detail="Request failed")
+            return url
 
     except Exception as e:
         return {"error": str(e)}
