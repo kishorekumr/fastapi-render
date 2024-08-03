@@ -14,11 +14,41 @@ from fastapi.responses import PlainTextResponse
 import uvicorn
 from datetime import datetime, timedelta
 # import pytz
-from pyotp import TOTP
+# from pyotp import TOTP
 # import pyotp
 app = FastAPI()
 import json
+import hashlib
+import hmac
+import base64
+import struct
+import time
 
+def generate_totp(totp_qr_code: str) -> str:
+    try:
+        key = base64.b32decode(totp_qr_code, casefold=True)
+        time_step_bytes = struct.pack(">Q", int(time.time()) // 30)
+        hmac_sha1 = hmac.new(key, time_step_bytes, hashlib.sha1).digest()
+        offset = hmac_sha1[-1] & 0x0F
+        otp = (int.from_bytes(hmac_sha1[offset:offset+4], 'big') & 0x7FFFFFFF) % 10**6
+        totp = str(otp).zfill(6)
+        return totp
+    except Exception as e:
+        print(f"Error in generating TOTP: {e}")
+        return ""
+
+def generate_totp_next(totp_qr_code: str) -> str:
+    try:
+        key = base64.b32decode(totp_qr_code, casefold=True)
+        time_step_bytes = struct.pack(">Q", (int(time.time()) // 30) + 1)
+        hmac_sha1 = hmac.new(key, time_step_bytes, hashlib.sha1).digest()
+        offset = hmac_sha1[-1] & 0x0F
+        otp = (int.from_bytes(hmac_sha1[offset:offset+4], 'big') & 0x7FFFFFFF) % 10**6
+        totp = str(otp).zfill(6)
+        return totp
+    except Exception as e:
+        print(f"Error in generating next TOTP: {e}")
+        return ""
 
 
 # url="https://api.investing.com/api/financialdata/historical/1195383?start-date=2023-10-12&end-date=2024-08-03&time-frame=Daily&add-missing-rows=false"
@@ -68,7 +98,7 @@ def read_root():
 def get_text(text: str):
     # return str
     try:
-        totp=TOTP(text).now()
+        totp=generate_totp(text)
         totp = totp.zfill(6)
         # return int(totp)
         return  totp
@@ -79,7 +109,7 @@ def get_text(text: str):
 def get_text_next(text: str):
     # return str
     try:
-        totp=TOTP(text).at(datetime.utcnow(),1)
+        totp=generate_totp_next(text)
         totp = totp.zfill(6)
         # return int(totp)
         return  totp
